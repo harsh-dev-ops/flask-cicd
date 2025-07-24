@@ -1,1 +1,83 @@
 # flask-cicd
+
+```yaml
+
+# CI CD Workflow
+
+name: CI/CD for dockerized flask app
+
+on:
+    push:
+        branches: [ main ]
+    pull_request:
+        branches: [ main ]
+
+jobs:
+    dockerbuild-test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v2
+
+            - name: Build the test docker image
+              run: docker build . -f docker/Dockerfile.test --tag flask-app-githubactions:test
+
+            - name: Test the docker image
+              run: docker run flask-app-githubactions:test
+    
+    dockerbuild-run:
+        needs: dockerbuild-test
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v2
+
+            - name: Build the test docker image
+              run: docker build . -f docker/Dockerfile --tag flask-app-githubactions:${{github.run_number}}
+
+            - name: Runing the docker image
+              run:
+                |
+                container_id=$(docker run -d -p 8000:8000 flask-app-githubactions:${{github.run_number}})
+                sleep 5  # Give the container time to start
+                curl --retry 5 --retry-delay 3 --retry-connrefused --fail http://localhost:8000
+                docker stop $container_id
+                docker rm $container_id
+                    
+    dockerbuild-push:
+        needs: [dockerbuild-test, dockerbuild-run]
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v3
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v2
+
+            - name: Login to dockerhub
+              uses: docker/login-action@v2
+              with:
+                username: ${{ secrets.DOCKER_USERNAME }}
+                password: ${{ secrets.DOCKER_PASSWORD }}
+
+            - name: Build and publish image
+              uses: docker/build-push-action@v4
+              with:
+                context: .
+                file: ./docker/Dockerfile
+                push: true
+                tags: ${{ secrets.DOCKER_USERNAME }}/flask-app-githubactions:latest
+            
+            
+        
+
+
+````
