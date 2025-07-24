@@ -44,7 +44,7 @@ jobs:
                     
     dockerbuild-push:
         needs: [dockerbuild-test, dockerbuild-run]
-        runs-on: ubuntu-test
+        runs-on: ubuntu-latest
         permissions:
             contents: read
             packages: write
