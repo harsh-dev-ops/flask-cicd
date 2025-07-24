@@ -45,6 +45,9 @@ jobs:
     dockerbuild-push:
         needs: [dockerbuild-test, dockerbuild-run]
         runs-on: ubuntu-test
+        permissions:
+            contents: read
+            packages: write
         
         steps:
             - name: Checkout Code
