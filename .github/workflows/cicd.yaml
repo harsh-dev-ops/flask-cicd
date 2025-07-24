@@ -30,16 +30,17 @@ jobs:
               uses: docker/setup-buildx-action@v2
 
             - name: Build the test docker image
-              run: docker build . -f docker/Dockerfile --tag flask-app-githubactions:run
-            
-            - name: Run and test the docker image
-              run: |
+              run: docker build . -f docker/Dockerfile --tag flask-app-githubactions:${{github.run_number}}
+
+            - name: Runing the docker image
+              run:
+                |
                 container_id=$(docker run -d -p 8000:8000 flask-app-githubactions:${{github.run_number}})
                 sleep 5  # Give the container time to start
                 curl --retry 5 --retry-delay 3 --retry-connrefused --fail http://localhost:8000
                 docker stop $container_id
                 docker rm $container_id
-            
+                    
     dockerbuild-push:
         runs-on: ubuntu-test
         steps:
@@ -60,7 +61,7 @@ jobs:
                 tags: ${{ secrets.DOCKER_USERNAME }}/flask-app-githubactions:latest
             
             - name: Image digest
-              run: echo ${{ steps.build-and-publish.outputs.digest }}
+              run: echo ${{ steps.build-and-publish.outputs.digest}}
             
             
         
