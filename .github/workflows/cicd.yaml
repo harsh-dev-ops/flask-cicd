@@ -67,8 +67,8 @@ jobs:
                 push: true
                 tags: ${{ secrets.DOCKER_USERNAME }}/flask-app-githubactions:latest
             
-            - name: Image digest
-              run: echo ${{ steps.build-and-publish.outputs.digest}}
+            # - name: Image digest
+            #   run: echo ${{ steps.build-and-publish.outputs.digest}}
             
             
         
