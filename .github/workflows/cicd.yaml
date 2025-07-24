@@ -22,6 +22,7 @@ jobs:
               run: docker run flask-app-githubactions:test
     
     dockerbuild-run:
+        needs: dockerbuild-test
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -42,6 +43,7 @@ jobs:
                 docker rm $container_id
                     
     dockerbuild-push:
+        needs: [dockerbuild-test, dockerbuild-run]
         runs-on: ubuntu-test
         steps:
             - uses: actions/checkout@v4
@@ -56,7 +58,7 @@ jobs:
               uses: docker/build-push-action@v4
               with:
                 context: .
-                file: ./Dockerfile
+                file: ./docker/Dockerfile
                 push: true
                 tags: ${{ secrets.DOCKER_USERNAME }}/flask-app-githubactions:latest
             
