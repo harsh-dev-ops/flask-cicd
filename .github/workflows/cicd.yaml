@@ -7,7 +7,7 @@ on:
         branches: [ main ]
 
 jobs:
-    dockerbuild-test:
+    dockerbuild-run-test:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -31,12 +31,12 @@ jobs:
 
             - name: Build the test docker image
               run: docker build . -f docker/Dockerfile --tag flask-app-githubactions:${{github.run_number}}
-
-            - name: Runing the docker image
-              run: docker run flask-app-githubactions:${{github.run_number}} --p 8000:8000
             
-            - name: Testing the image is running or not
-              run: curl http://localhost:8000 && docker stop
+            - name: Run and test the docker image
+              run: |
+                container_id=$(docker run -d -p 8000:8000 flask-app-githubactions:${{github.run_number}})
+                curl --retry 5 --retry-delay 3 --retry-connrefused http://localhost:8000
+                docker stop $container_id
             
     dockerbuild-push:
         runs-on: ubuntu-test
